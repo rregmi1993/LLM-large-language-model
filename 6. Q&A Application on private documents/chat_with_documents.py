@@ -66,6 +66,9 @@ def calculate_embedding_cost(texts):
   #print(f"Embedding cost in USD: {total_tokens / 1000 * 0.004:.6f}")
   return total_tokens, total_tokens / 1000 * 0.004
 
+def clear_history():
+  if 'history' in st.session_state:
+    del st.session_state['history']
 
 if __name__=='__main__':
   load_dotenv(find_dotenv(), override=True)
@@ -78,9 +81,9 @@ if __name__=='__main__':
       os.environ['OPEN_API_KEY'] = api_key
 
     upload_file = st.file_uploader('upload a file: ', type=['pdf', 'docx', 'txt'])
-    chunk_size = st.number_input('chunk size:', min_value=100, max_value=2048, value=512)
-    k = st.number_input('k', min_value=1, max_value=30, value=3)
-    add_data = st.button('Add Data')
+    chunk_size = st.number_input('chunk size:', min_value=100, max_value=2048, value=512, on_change=clear_history)
+    k = st.number_input('k', min_value=1, max_value=30, value=3, on_change=clear_history)
+    add_data = st.button('Add Data', on_click=clear_history)
 
 
     if upload_file and add_data:
@@ -110,6 +113,15 @@ if __name__=='__main__':
       st.write(f'k : {k}')
       answer = ask_question_for_ans(vectore_store, qns, k)
       st.text_area('LLM answer : ', value=answer)
+  
+    st.divider()
+
+    if 'history' not in st.session_state and answer is not None:
+      st.session_state.history = ''
+    value = f'Qns: {qns} \n Ans: {answer}'
+    st.session_state.history = f'{value} \n {"_"*100} \n {st.session_state.history}'
+    h = st.session_state.history
+    st.text_area(label='chat history', value=h, key='history', height=500)
 
 
       
